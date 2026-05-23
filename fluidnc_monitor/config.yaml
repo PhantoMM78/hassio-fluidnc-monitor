@@ -1,6 +1,6 @@
 name: "FluidNC Monitor"
 description: "Мониторинг лазеров FluidNC/Grbl через MQTT"
-version: "1.3.0"
+version: "1.4.0"
 slug: "fluidnc_monitor"
 init: false
 arch:
@@ -17,7 +17,15 @@ options:
   mqtt_password: ""
   mqtt_prefix: "fluidnc"
   poll_interval: 2.0
-  lasers: "[{\"name\": \"laser\", \"host\": \"192.168.1.105\", \"protocol\": \"websocket\", \"port\": 81}]"
+  lasers:
+    - name: "laser"
+      host: "192.168.1.105"
+      protocol: "websocket"
+      port: 81
+    - name: "laser_mini"
+      host: "192.168.1.107"
+      protocol: "telnet"
+      port: 23
 schema:
   mqtt_host: str
   mqtt_port: int
@@ -25,4 +33,8 @@ schema:
   mqtt_password: str
   mqtt_prefix: str
   poll_interval: float
-  lasers: str
+  lasers:
+    - name: str
+      host: str
+      protocol: str
+      port: int
