@@ -1,4 +1,5 @@
-FROM ghcr.io/home-assistant/amd64-base:3.19
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
 RUN apk add --no-cache python3 py3-pip jq
 RUN pip install websockets paho-mqtt --break-system-packages
