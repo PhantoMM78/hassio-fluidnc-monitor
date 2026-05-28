@@ -201,6 +201,8 @@ async def telnet_worker(laser: dict, mqtt_client: mqtt.Client):
     host = laser["host"]
     port = laser.get("port", 23)
     log  = logging.getLogger(name)
+    retry_delay = 10
+    MAX_RETRY_DELAY = 60
 
     while True:
         reader = writer = None
@@ -210,6 +212,7 @@ async def telnet_worker(laser: dict, mqtt_client: mqtt.Client):
                 asyncio.open_connection(host, port), timeout=10,
             )
             log.info("Telnet: Подключено!")
+            retry_delay = 10  # сброс при успехе
             publish_availability(mqtt_client, name, True)
             await asyncio.wait_for(reader.readline(), timeout=5)
 
@@ -233,13 +236,19 @@ async def telnet_worker(laser: dict, mqtt_client: mqtt.Client):
                         break
 
         except Exception as e:
-            log.warning(f"Telnet: Ошибка: {e}. Повтор через 10 сек...")
+            log.warning(f"Telnet: Ошибка: {e}. Повтор через {retry_delay} сек...")
+            publish_availability(mqtt_client, name, False)
+            await asyncio.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, MAX_RETRY_DELAY)  # увеличиваем задержку
+            if writer:
+                try: writer.close(); await writer.wait_closed()
+                except: pass
+            continue
         finally:
             if writer:
                 try: writer.close(); await writer.wait_closed()
                 except: pass
             publish_availability(mqtt_client, name, False)
-            await asyncio.sleep(10)
 
 # ─────────────────────────────────────────────
 # Диспетчер
